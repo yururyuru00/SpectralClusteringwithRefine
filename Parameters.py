@@ -8,22 +8,22 @@ class P:
     #sp1
     sigma = -1
     #sp2
-    sita = 1
+    sita = 3
     gamma = 0.6
     #refine
     alpha = 1.
     beta = 6.
     gamma2 = 0.5
-    edge_size = 5
+    edge_size = 80
     mode = "norm"
     #dataset
-    AN_data = 'citeseer'
+    AN_data = 'cora'
     AN_type = 'd'
-    clus_size = 2
+    clus_size = 7
     
     #experiment out file
-    dir = "D:/python/data/"
-    buff = "citeseer_visualize"
+    dir = 'D:/python/GCN/DeepGraphClustering/data/cora/'
+    buff = "test"
     
     def read_setting(setting):
         P.sigma = float(setting[0])

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[ ]:
+# In[1]:
 
 
 import numpy as np
@@ -27,7 +27,7 @@ import networkx as nx
 from Parameters import P as p
 
 
-def spectral_clustering(S, ans):
+def spectral_clustering(S, labels):
     if(p.mode == "norm"):
         Ls = ml.makeNormLaplacian(S)
     else:
@@ -40,12 +40,14 @@ def spectral_clustering(S, ans):
     for i in range(10):
         k_means = KMeans(n_clusters=p.clus_size, n_init=10, tol=0.0000001)
         k_means.fit(vec)
-        ari += clus.adjusted_rand_score(ans, k_means.labels_)
-        nmi += clus.adjusted_mutual_info_score(ans, k_means.labels_, "arithmetic")
-        pur += purity(ans, k_means.labels_)
+        np.savetxt('D:/python/GCN/DeepGraphClustering/data/experiment/sclump_label.csv', 
+                   k_means.labels_)
+        ari += clus.adjusted_rand_score(labels, k_means.labels_)
+        nmi += clus.adjusted_mutual_info_score(labels, k_means.labels_, "arithmetic")
+        pur += purity(labels, k_means.labels_)
     return 'converge', Ls, val, vec, ari/10., nmi/10., pur/10.
         
-def make_buff(sp, S, W, lamb, ari, nmi, pur, val, vec, tri, ans, w, eigen0):
+def make_buff(sp, S, W, lamb, ari, nmi, pur, val, vec, tri, labels, w, eigen0):
     root = p.dir + p.buff
     if(tri==3):
         top = np.argsort(-lamb)
@@ -91,7 +93,6 @@ def ini_W(sp, lamb):
     return W
     
 def update_S(S, W, vec):
-    print(p.edge_size)
     def func_lamb(x):
         sum_ = 0.0
         for j in range(len(ui)):
@@ -153,13 +154,12 @@ def main():
     #initialize
     plt.rcParams.update({'figure.max_open_warning': 0})
     np.random.seed(0)
-    os.mkdir(p.dir+p.buff)
-    w = open(p.dir+p.buff+"/result.txt", "w")
-    with open(p.dir + "{}_ans.txt".format(p.AN_data), "r") as r:
-        ans = np.array([int(clusterID) for clusterID in r.readline().split(" ")])
+    #os.mkdir(p.dir+p.buff)
+    #w = open(p.dir+p.buff+"/result.txt", "w")
     
-    sp1 = txt2Mat.read_sp1(p.dir+"{}.txt".format(p.AN_data))
-    sp2a, sp2b = txt2Mat.read_sp2(p.dir+"{}_edge.txt".format(p.AN_data), len(sp1[0]))
+    features, edges, labels = txt2Mat.data_load(p.dir, p.AN_data)
+    sp1 = txt2Mat.make_sp1(features)
+    sp2a, sp2b = txt2Mat.make_sp2(edges, len(sp1[0]))
     sp = sp1 + [sp2a, sp2b]
     lamb = ini_lambda(sp)
     Q = np.zeros((len(sp), len(sp)))
@@ -176,20 +176,20 @@ def main():
     S = np.copy(W)
 
     #update + SC
-    for tri in range(20):
-        state, Ls, val, vec, ari, nmi, pur = spectral_clustering(S, ans)
+    for tri in range(2):
+        state, Ls, val, vec, ari, nmi, pur = spectral_clustering(S, labels)
         if(state == 'converge'):
             eigen0 = gamma_tuning(val)
             print("tri: {}\n\tARI: {:.4f}\n\tNMI: {:.4f}\n\tPurity: {:.4f}".format(tri, ari, nmi, pur))
-            w.write("tri: {}\n\tARI: {:.4f}\n\tNMI: {:.4f}\n\tPurity: {:.4f}\n".format(tri, ari, nmi, pur))
-            w.write("\tnumOfComponents: {}\n".format(eigen0))
+            #w.write("tri: {}\n\tARI: {:.4f}\n\tNMI: {:.4f}\n\tPurity: {:.4f}\n".format(tri, ari, nmi, pur))
+            #w.write("\tnumOfComponents: {}\n".format(eigen0))
             if(eigen0 == p.clus_size):
                 break
         else:
             print("=================================\narpack error\n===========================")
-            w.write("tri: {}\narpack no converge".format(tri))
+            #w.write("tri: {}\narpack no converge".format(tri))
             break
-        make_buff(sp, S, W, lamb, ari, nmi, pur, val, vec, tri, ans, w, eigen0)
+        #make_buff(sp, S, W, lamb, ari, nmi, pur, val, vec, tri, labels, w, eigen0)
         
         S_buff = np.copy(S)
         update_S(S, W, vec)
@@ -198,9 +198,9 @@ def main():
         update_lamb(lamb, S, sp, Q)
         W = ini_W(sp, lamb)
     
-    make_buff(sp, S, W, lamb, ari, nmi, pur, val, vec, tri, ans, w, eigen0)
-    p.dump(p.dir+p.buff+"/paramters.txt", len(S), len(sp))
-    w.close()
+    #make_buff(sp, S, W, lamb, ari, nmi, pur, val, vec, tri, labels, w, eigen0)
+    #p.dump(p.dir+p.buff+"/paramters.txt", len(S), len(sp))
+    #w.close()
     
 ##############################
 if __name__ == '__main__':

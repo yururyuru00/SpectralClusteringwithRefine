@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[ ]:
+# In[9]:
 
 
 import numpy as np
@@ -185,7 +185,6 @@ def vec2file(vec, path):
     with open(path, "w") as w:
         for i in vec:
             w.write("{} ".format(i))
-            
 
 
 # In[ ]:

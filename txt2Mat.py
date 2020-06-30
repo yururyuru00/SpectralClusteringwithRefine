@@ -12,7 +12,7 @@ import MatLib as ml
 def data_load(path, dataset):
     idfeature_features_labels = np.genfromtxt("{}{}.content".format(path, dataset),
                                         dtype=np.dtype(str))
-    features = np.array([[int(i) for i in vec] for vec in idfeature_features_labels[:, 1:-1]])
+    features = np.array([[float(i) for i in vec] for vec in idfeature_features_labels[:, 1:-1]])
     labels = idfeature_features_labels[:, -1]
     clas_map = {clas : l for l, clas in enumerate(set(labels))}
     labels = np.array([l for l in map(clas_map.get, labels)])
@@ -47,7 +47,7 @@ def make_sp1(features):
         mat = np.zeros((usr_size, usr_size))
         for i in range(usr_size):
             for j in range(i+1, usr_size):
-                mat[i][j] = np.dot(features[i], features[j]) / (np.linalg.norm(features[i])                                   * np.linalg.norm(features[j]))
+                mat[i][j] = np.dot(features[i], features[j]) / (np.linalg.norm(features[i])                                    * np.linalg.norm(features[j]))
                 mat[j][i] = mat[i][j]
         for d in range(len(mat)):
             mat[d][d] = 0.
@@ -64,7 +64,7 @@ def make_sp2(edges, usr_size):
 class Graph():
     def __init__(self, edges, usr_size):
         self.N = np.array([set() for i in range(usr_size)])
-        for obj, opponent in edges:
+        for opponent, obj in edges:
             self.N[obj].add(opponent)
         self.max_size = np.zeros(P.sita+1)
         self.R = np.array([[set() for i in range(usr_size)] for j in range(P.sita+1)])
@@ -107,10 +107,4 @@ class Graph():
         rate2 = (path-1) / self.max_size[step-1]
         delta = math.pow(P.gamma, step-1) - math.pow(P.gamma, step)
         return math.pow(P.gamma, step) + delta * rate1,                math.pow(P.gamma, step) + delta * rate2
-
-
-# In[ ]:
-
-
-
 
