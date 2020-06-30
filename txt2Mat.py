@@ -9,84 +9,63 @@ import math
 from Parameters import P
 import MatLib as ml
             
-def read_attribute(path):
-    with open(path, "r") as r:
-        size = r.readline().rstrip().split(" ")
-        usr_size = int(size[1])
-        dim_size = int(size[0])
-        X = np.zeros((usr_size, dim_size))
-        dim_id = 0
-        for line in r.readlines():
-            dim, usr, val = split(line)
-            X[usr][dim] = val
-    return X
+def data_load(path, dataset):
+    idfeature_features_labels = np.genfromtxt("{}{}.content".format(path, dataset),
+                                        dtype=np.dtype(str))
+    features = np.array([[int(i) for i in vec] for vec in idfeature_features_labels[:, 1:-1]])
+    labels = idfeature_features_labels[:, -1]
+    clas_map = {clas : l for l, clas in enumerate(set(labels))}
+    labels = np.array([l for l in map(clas_map.get, labels)])
+    idfeature = np.array(idfeature_features_labels[:, 0], dtype=np.int32)
+    idfeature_map = {j: i for i, j in enumerate(idfeature)}
+    edges_unordered = np.genfromtxt("{}{}.cites".format(path, dataset), dtype=np.int32)
+    edges = np.array(list(map(idfeature_map.get, edges_unordered.flatten())),
+                     dtype=np.int32).reshape(edges_unordered.shape)
+    return features, edges, labels
 
-def split(line):
-    line = line.split(" ")
-    return int(line[0]), int(line[1]), float(line[2])
 
-def read_sp1(path):
-    def makeMat_sp1(val_list, mat):
-        for i in range(len(val_list)):
-            for j in range(i+1, len(val_list)):
-                mat[i][j] = math.exp(-(val_list[i]-val_list[j])*(val_list[i]-val_list[j])                                      /(2*P.sigma*P.sigma))
+def make_sp1(features):
+    def makeMat_sp1_i(feature, usr_size):
+        mat = np.zeros((usr_size, usr_size))
+        for i in range(usr_size):
+            for j in range(i+1, usr_size):
+                mat[i][j] = math.exp(-(feature[i]-feature[j])*(feature[i]-feature[j])                                      /(2*P.sigma*P.sigma))
                 mat[j][i] = mat[i][j]
         for d in range(len(val_list)):
             mat[d][d] = 0.
+        return mat
             
-    if(P.AN_type == 'h'):
-        with open(path, "r") as r:
-            size = r.readline().rstrip().split(" ")
-            usr_size = int(size[1])
-            dim1_size = int(size[0])
-            mats = [np.zeros((usr_size, usr_size)) for i in range(dim1_size)]
-            dim_id = 0
-            val_list = np.zeros(int(size[1]))
-            for line in r.readlines():
-                dim, usr, val = split(line)
-                if(dim != dim_id):
-                    makeMat_sp1(val_list, mats[dim_id])
-                    dim_id += 1
-                val_list[usr] = val
-            makeMat_sp1(val_list, mats[dim_id])
-            for i in range(len(mats)):
-                ml.normalized(mats[i])
+    usr_size, dim_size = len(features), len(features[0])
+    if(P.AN_type == 'h'): #AN_type=human
+        mats = [np.zeros((usr_size, usr_size)) for i in range(dim_size)]
+        for i, feature in enumerate(features.T):
+            mats[i] = makeMat_sp1_i(feature, usr_size)
+            ml.normalized(mats[i])
         return mats
     
-    else:
-        with open(path, "r") as r:
-            size = r.readline().rstrip().split(" ")
-            usr_size = int(size[1])
-            dim1_size = int(size[0])
-            dim_id = 0
-            X = np.zeros((usr_size, dim1_size))
-            for line in r.readlines():
-                dim, usr, val = split(line)
-                X[usr][dim] = val
-            mat = np.zeros((usr_size, usr_size))
-            for i in range(len(mat)):
-                for j in range(i+1, len(mat[0])):
-                    mat[i][j] = np.dot(X[i], X[j]) / (np.linalg.norm(X[i]) * np.linalg.norm(X[j]))
-                    mat[j][i] = mat[i][j]
-            for d in range(len(mat)):
-                mat[d][d] = 0.
-            ml.normalized(mat)
+    else: #AN_type=document
+        mat = np.zeros((usr_size, usr_size))
+        for i in range(usr_size):
+            for j in range(i+1, usr_size):
+                mat[i][j] = np.dot(features[i], features[j]) / (np.linalg.norm(features[i])                                   * np.linalg.norm(features[j]))
+                mat[j][i] = mat[i][j]
+        for d in range(len(mat)):
+            mat[d][d] = 0.
+        ml.normalized(mat)
         return [mat]
             
-def read_sp2(file, usr_size):
-    gi = Graph(file, usr_size)
+def make_sp2(edges, usr_size):
+    gi = Graph(edges, usr_size)
     s2a, s2b = gi.makeMat_sp2()
     ml.normalized(s2a)
     ml.normalized(s2b)
     return s2a, s2b
 
 class Graph():
-    def __init__(self, file, usr_size):
+    def __init__(self, edges, usr_size):
         self.N = np.array([set() for i in range(usr_size)])
-        with open(file, "r") as r:
-            for pair in r.readlines():
-                pair = pair.split(" ")
-                self.N[int(pair[0])].add(int(pair[1]))
+        for obj, opponent in edges:
+            self.N[obj].add(opponent)
         self.max_size = np.zeros(P.sita+1)
         self.R = np.array([[set() for i in range(usr_size)] for j in range(P.sita+1)])
         self.Ft = np.array([[set() for i in range(usr_size)] for j in range(P.sita+1)])    
