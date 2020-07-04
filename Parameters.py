@@ -6,7 +6,7 @@
 
 class P:
     #sp1
-    sigma = -1
+    sigma = 1
     #sp2
     sita = 3
     gamma = 0.6

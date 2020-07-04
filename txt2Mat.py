@@ -9,10 +9,24 @@ import math
 from Parameters import P
 import MatLib as ml
             
-def data_load(path, dataset):
+def load_fromgen(path, dataset):
     idfeature_features_labels = np.genfromtxt("{}{}.content".format(path, dataset),
                                         dtype=np.dtype(str))
     features = np.array([[float(i) for i in vec] for vec in idfeature_features_labels[:, 1:-1]])
+    labels = idfeature_features_labels[:, -1]
+    clas_map = {clas : l for l, clas in enumerate(set(labels))}
+    labels = np.array([l for l in map(clas_map.get, labels)])
+    idfeature = np.array(idfeature_features_labels[:, 0], dtype=np.int32)
+    idfeature_map = {j: i for i, j in enumerate(idfeature)}
+    edges_unordered = np.genfromtxt("{}{}.cites".format(path, dataset), dtype=np.int32)
+    edges = np.array(list(map(idfeature_map.get, edges_unordered.flatten())),
+                     dtype=np.int32).reshape(edges_unordered.shape)
+    return features, edges, labels
+
+def load_fromcsv(path, dataset):
+    features = np.loadtxt("{}{}.csv".format(path, dataset))
+    idfeature_features_labels = np.genfromtxt("{}{}.content".format(path, dataset),
+                                        dtype=np.dtype(str))
     labels = idfeature_features_labels[:, -1]
     clas_map = {clas : l for l, clas in enumerate(set(labels))}
     labels = np.array([l for l in map(clas_map.get, labels)])
@@ -31,7 +45,7 @@ def make_sp1(features):
             for j in range(i+1, usr_size):
                 mat[i][j] = math.exp(-(feature[i]-feature[j])*(feature[i]-feature[j])                                      /(2*P.sigma*P.sigma))
                 mat[j][i] = mat[i][j]
-        for d in range(len(val_list)):
+        for d in range(usr_size):
             mat[d][d] = 0.
         return mat
             

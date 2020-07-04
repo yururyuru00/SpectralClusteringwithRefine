@@ -36,16 +36,14 @@ def spectral_clustering(S, labels):
         val, vec = eigsh(Ls, p.clus_size, which="SM")
     except scipy.sparse.linalg.ArpackNoConvergence:
         return 'nonconverge', 0, 0, 0, 0, 0, 0
-    ari, nmi, pur = 0., 0., 0.
-    for i in range(10):
-        k_means = KMeans(n_clusters=p.clus_size, n_init=10, tol=0.0000001)
+    ari, nmi, pur, times = 0., 0., 0., 10
+    for i in range(times):
+        k_means = KMeans(n_clusters=p.clus_size, n_init=10, random_state=0, tol=0.0000001)
         k_means.fit(vec)
-        np.savetxt('D:/python/GCN/DeepGraphClustering/data/experiment/sclump_label.csv', 
-                   k_means.labels_)
         ari += clus.adjusted_rand_score(labels, k_means.labels_)
         nmi += clus.adjusted_mutual_info_score(labels, k_means.labels_, "arithmetic")
         pur += purity(labels, k_means.labels_)
-    return 'converge', Ls, val, vec, ari/10., nmi/10., pur/10.
+    return 'converge', Ls, val, vec, ari/times, nmi/times, pur/times
         
 def make_buff(sp, S, W, lamb, ari, nmi, pur, val, vec, tri, labels, w, eigen0):
     root = p.dir + p.buff
@@ -157,7 +155,7 @@ def main():
     #os.mkdir(p.dir+p.buff)
     #w = open(p.dir+p.buff+"/result.txt", "w")
     
-    features, edges, labels = txt2Mat.data_load(p.dir, p.AN_data)
+    features, edges, labels = txt2Mat.load_fromgen(p.dir, p.AN_data)
     sp1 = txt2Mat.make_sp1(features)
     sp2a, sp2b = txt2Mat.make_sp2(edges, len(sp1[0]))
     sp = sp1 + [sp2a, sp2b]
