@@ -1,12 +1,6 @@
-#!/usr/bin/env python
-# coding: utf-8
-
-# In[ ]:
-
-
 class P:
     #sp1
-    sigma = 1
+    sigma = 0.2
     #sp2
     sita = 3
     gamma = 0.6
@@ -15,17 +9,13 @@ class P:
     beta = 6.
     gamma2 = 0.5
     edge_size = 80
-    mode = "norm"
+    mode = "unnorm"
     #dataset
-    AN_data = 'cora'
-    AN_type = 'd'
-    clus_size = 7
+    AN_data = 'politicsuk'
+    AN_type = 'h'
+    clus_size = 5
     
-    #experiment out file
-    dir = 'D:/python/GCN/DeepGraphClustering/data/cora/'
-    buff = "test"
-    
-    def read_setting(setting):
+    def read_setting(self, setting):
         P.sigma = float(setting[0])
         P.sita = int(setting[1])
         P.gamma = float(setting[2])
@@ -40,7 +30,7 @@ class P:
         P.buff = str(setting[11])
 
         
-    def dump(path, usr_size, dim1_size):
+    def dump(self, path, usr_size, dim1_size):
         with open(path, "w") as w:
             w.write("sigma: {0}\n".format(P.sigma))
             w.write("sita: {0}\n".format(P.sita))
