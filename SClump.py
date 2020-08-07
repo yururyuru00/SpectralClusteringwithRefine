@@ -1,92 +1,75 @@
-#!/usr/bin/env python
-# coding: utf-8
-
-# In[1]:
-
-
 import numpy as np
-import cvxopt
-import MatLib as ml
-import math
-import sys
-import os
-import warnings
-sys.path.append("D:\\python\\data2Mat")
 import matplotlib.pyplot as plt
-import seaborn as sns
+import cvxopt, scipy.optimize
+from tqdm import tqdm
 from cvxopt import matrix
 from scipy.sparse.linalg import eigsh
-import scipy.optimize
-from scipy import io, sparse
-import txt2Mat
-from clustering_quolity import purity
 from sklearn.cluster import KMeans
 import sklearn.metrics.cluster as clus
-import remaind
-import networkx as nx
+
+import MatLib as ml
+import utilities
 from Parameters import P as p
 
 
-def spectral_clustering(S, labels):
+def spectral_clustering(S, labels, ite):
     if(p.mode == "norm"):
         Ls = ml.makeNormLaplacian(S)
     else:
         Ls = ml.makeLaplacian(S)
     try:
-        val, vec = eigsh(Ls, p.clus_size, which="SM")
+        eigen_val, eigen_vec = eigsh(Ls, p.clus_size, which="SM")
     except scipy.sparse.linalg.ArpackNoConvergence:
-        return 'nonconverge', 0, 0, 0, 0, 0, 0
-    ari, nmi, pur, times = 0., 0., 0., 10
-    for i in range(times):
-        k_means = KMeans(n_clusters=p.clus_size, n_init=10, random_state=0, tol=0.0000001)
-        k_means.fit(vec)
-        ari += clus.adjusted_rand_score(labels, k_means.labels_)
-        nmi += clus.adjusted_mutual_info_score(labels, k_means.labels_, "arithmetic")
-        pur += purity(labels, k_means.labels_)
-    return 'converge', Ls, val, vec, ari/times, nmi/times, pur/times
-        
-def make_buff(sp, S, W, lamb, ari, nmi, pur, val, vec, tri, labels, w, eigen0):
-    root = p.dir + p.buff
-    if(tri==3):
-        top = np.argsort(-lamb)
-        index = {0,1}
-        for i in index:
-            ml.mat2file(sp[top[i]], root + "/sp{}#{}.txt".format(top[i], i))
-            ml.heatmap(sp[top[i]], 0, 1./len(S))
-            plt.savefig(root + "/sp{}#{}.png".format(top[i], i))
-    ml.mat2file(S, root + "/S{0}.txt".format(tri))
-    ml.mat2file(W, root + "/W{0}.txt".format(tri))
-    ml.vec2file(lamb, root + "/lamb{0}.txt".format(tri))
-    ml.mat2file(vec, root + "/vec{0}.txt".format(tri))
-    ml.vec2file(val, root + "/eigenval{}.txt".format(tri))
-    ml.heatmap(S, 0, 1./p.edge_size)
-    plt.savefig(root + "/S{0}.png".format(tri))
-    ml.heatmap(W, 0, 1./p.edge_size)
-    plt.savefig(root + "/W{0}.png".format(tri))
-    fig = plt.figure(figsize=(60,60),dpi=200)
-    for i in range(4):
-        ax = fig.add_subplot(2, 2, i+1)
-        ax.plot(vec.T[i])
-    fig.savefig(root + "/vec{0}.png".format(tri))  
+        return 'nonconverge'
     
+    metrics = {'ari':0., 'nmi':0., 'purity':0.}
+    for _ in range(10):
+        k_means = KMeans(n_clusters=p.clus_size, n_init=10, tol=0.0000001)
+        k_means.fit(eigen_vec)
+        metrics['ari'] += clus.adjusted_rand_score(labels, k_means.labels_)
+        metrics['nmi'] += clus.adjusted_mutual_info_score(labels, k_means.labels_, "arithmetic")
+        metrics['purity'] += utilities.purity(labels, k_means.labels_)
+    for key in metrics.keys(): metrics[key] = metrics[key] / 10.
+    np.savetxt('./experiment/{0}_pred{1}'.format(p.AN_data, ite), k_means.labels_, fmt='%d')
+    return 'converge', eigen_val, eigen_vec, metrics
+
+def ini_Q(sp):
+    obj_size, dim_size = len(sp[0]), len(sp)
+    Q = np.zeros((dim_size, dim_size))
+
+    pbar = tqdm(range(dim_size), ncols=100)
+    pbar.set_description("\tinitialize Q start")
+    for i in pbar:
+        for j in range(i, dim_size):
+            sum_ = 0.
+            for k in range(obj_size):
+                sum_ += np.dot(sp[i][k], sp[j][k])
+            Q[i][j] = sum_
+            Q[j][i] = sum_
+    for d in range(len(Q)):
+        Q[d][d] += p.beta
+    return Q
+
 def ini_lambda(sp):
+    dim_size = len(sp)
     if(p.AN_type == 'h'):
-        lamb = np.zeros(len(sp))
-        with open(p.dir+'{}_attribute_ratio.txt'.format(p.AN_data), 'r') as r:
-            ratio = r.readline().rstrip().split(' ')
-            ratio = np.array([float(val) for val in ratio])
-        ratio_sum = np.sum(ratio)
-        for i in range(len(sp)-2):
-            lamb[i] = 0.5 * (ratio[i]/ratio_sum)
-        lamb[len(sp)-2], lamb[len(sp)-1] = 0.25, 0.25
+        lamb = np.zeros(dim_size)
+        with open('./data/{0}/{0}_pca_contribution_ratio.csv'.format(p.AN_data), 'r') as r:
+            pca_contribution_ratio = r.readline().rstrip().split(' ')
+            pca_contribution_ratio = np.array([float(val) for val in pca_contribution_ratio])
+        ratio_sum = np.sum(pca_contribution_ratio)
+        for i in range(dim_size-2):
+            lamb[i] = 0.5 * (pca_contribution_ratio[i]/ratio_sum)
+        lamb[dim_size-2], lamb[dim_size-1] = 0.25, 0.25
         return lamb
     else:
         lamb = np.array([0.5,0.25,0.25])
         return lamb
 
 def ini_W(sp, lamb):
-    W = np.zeros((len(sp[0]), len(sp[0][0])))
-    for i in range(len(sp)):
+    obj_size, dim_size = len(sp[0]), len(sp)
+    W = np.zeros((obj_size, obj_size))
+    for i in range(dim_size):
         W += sp[i]*lamb[i]
     return W
     
@@ -117,8 +100,6 @@ def update_S(S, W, vec):
         for j in range(p.edge_size):
             S[i][tops[j]] = ml.relu(ui[j]-opt_lamb)
 
-    print("")
-
 def update_lamb(lamb, S, sp, Q):
     print("\tupdate_lambda start: ")
     Q = matrix(Q)
@@ -144,7 +125,7 @@ def gamma_tuning(val):
         p.gamma2 += (-(eigen0-1.)/(p.clus_size-1.) + 1.) * p.gamma2
     elif(eigen0 > p.clus_size):
         p.gamma2 = p.gamma2 / 2.
-    print("\tnumOfComponents: {}\n\tgamma: {}".format(eigen0, p.gamma2))
+    print("\tnum of components: {}\n\tgamma: {}".format(eigen0, p.gamma2))
     
     return eigen0
 
@@ -152,78 +133,32 @@ def main():
     #initialize
     plt.rcParams.update({'figure.max_open_warning': 0})
     np.random.seed(0)
-    #os.mkdir(p.dir+p.buff)
-    #w = open(p.dir+p.buff+"/result.txt", "w")
     
-    features, edges, labels = txt2Mat.load_fromgen(p.dir, p.AN_data)
-    sp1 = txt2Mat.make_sp1(features)
-    sp2a, sp2b = txt2Mat.make_sp2(edges, len(sp1[0]))
+    if(p.AN_data=='cora'): features, edges, labels = utilities.load_fromgen(p.AN_data)
+    else: features, edges, labels = utilities.load_fromcsv(p.AN_data)
+    sp1 = utilities.make_sp1(features)
+    sp2a, sp2b = utilities.make_sp2(edges, len(sp1[0]))
     sp = sp1 + [sp2a, sp2b]
+
+    Q = ini_Q(sp) #matrix Q is used for later process(update_lambda)
     lamb = ini_lambda(sp)
-    Q = np.zeros((len(sp), len(sp)))
-    for i in range(len(sp)):
-        for j in range(i, len(sp)):
-            sum = 0.
-            for k in range(len(sp[0])):
-                sum += np.dot(sp[i][k], sp[j][k])
-            Q[i][j] = sum
-            Q[j][i] = sum
-    for d in range(len(Q)):
-        Q[d][d] += p.beta
     W = ini_W(sp, lamb)
     S = np.copy(W)
 
-    #update + SC
-    for tri in range(2):
-        state, Ls, val, vec, ari, nmi, pur = spectral_clustering(S, labels)
+    #Spectral Clustering + Refine(update_S)
+    for tri in range(100):
+        state, eigen_val, eigen_vec, metrics = spectral_clustering(S, labels, tri)
         if(state == 'converge'):
-            eigen0 = gamma_tuning(val)
-            print("tri: {}\n\tARI: {:.4f}\n\tNMI: {:.4f}\n\tPurity: {:.4f}".format(tri, ari, nmi, pur))
-            #w.write("tri: {}\n\tARI: {:.4f}\n\tNMI: {:.4f}\n\tPurity: {:.4f}\n".format(tri, ari, nmi, pur))
-            #w.write("\tnumOfComponents: {}\n".format(eigen0))
-            if(eigen0 == p.clus_size):
-                break
-        else:
-            print("=================================\narpack error\n===========================")
-            #w.write("tri: {}\narpack no converge".format(tri))
-            break
-        #make_buff(sp, S, W, lamb, ari, nmi, pur, val, vec, tri, labels, w, eigen0)
-        
-        S_buff = np.copy(S)
-        update_S(S, W, vec)
-        print("\tS-S*: {0}".format(ml.frobenius_norm(S-S_buff)))
-            
+            print("tri: {}\n\tARI: {:.4f}\n\tNMI: {:.4f}\n\tPurity: {:.4f}" \
+                        .format(tri, metrics['ari'], metrics['nmi'], metrics['purity']))
+            eigen0 = gamma_tuning(eigen_val)
+            if(eigen0 == p.clus_size): break
+        else: print("===\narpack error\n==="); break
+
+        update_S(S, W, eigen_vec)
         update_lamb(lamb, S, sp, Q)
         W = ini_W(sp, lamb)
     
-    #make_buff(sp, S, W, lamb, ari, nmi, pur, val, vec, tri, labels, w, eigen0)
-    #p.dump(p.dir+p.buff+"/paramters.txt", len(S), len(sp))
-    #w.close()
-    
-##############################
+#--------------------------------------------------
 if __name__ == '__main__':
     main()
-
-
-# In[ ]:
-
-
-from Parameters import P
-import SClump
-import remaind
-
-
-def execute():
-    with open(P.dir + "experiment.csv") as r:
-        for setting in r.readlines():
-            setting = setting.rstrip().split(' ')
-            P.read_setting(setting)
-            main()
-    remaind.run(1)
-
-
-# In[ ]:
-
-
-
-
