@@ -2,6 +2,7 @@
 python scripts for my academic research#1.
 
 For a high-level explanation, read the following our paper.
+
 Yuta Yajima, Akihiro Inokuchi, [Refining Similarity Matrices for \\Clustering Attributed Networks Accurately](https://jsai.ixsq.nii.ac.jp/ej/?action=pages_view_main&active_action=repository_view_main_item_detail&item_id=10714&item_no=1&page_id=13&block_id=23) (SIG-SAI 2020)
 
 ## Requirements
