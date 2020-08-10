@@ -1,7 +1,7 @@
 # Guide to experimental replication
 
 | dataset | c | \sigma |
-|:---:|:---:|"---:|
+|:---:|:---:|:---:|
 | cora | 7 | - |
 | citeseer | 6 | - |
 | football | 20 | 3 |
