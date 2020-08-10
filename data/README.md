@@ -1,6 +1,12 @@
 # Guide to experimental replication
 
+Parameters could be specified by command line arguments. For each parameter, run below.
+```bash
+python SClump.py --help
+```
 
+Experimental results described in our paper for each dataset could be reproduced by setting up the following.
+Please specify the following parameters using the command line arguments.
 
 | dataset | c | sigma | m | disable |
 |:---:|:---:|:---:|:---:|:---:|
