@@ -1,6 +1,6 @@
 class P:
     #sp1
-    sigma = 0.2
+    sigma = 0.1
     #sp2
     sita = 3
     gamma = 0.6
@@ -8,12 +8,12 @@ class P:
     alpha = 1.
     beta = 6.
     gamma2 = 0.5
-    edge_size = 80
-    mode = "unnorm"
+    edge_size = 12
+    mode = "norm"
     #dataset
-    AN_data = 'politicsuk'
+    AN_data = 'olympics'
     AN_type = 'h'
-    clus_size = 5
+    clus_size = 28
     
     def read_setting(self, setting):
         P.sigma = float(setting[0])
