@@ -1,3 +1,4 @@
+import argparse
 import numpy as np
 import matplotlib.pyplot as plt
 import cvxopt, scipy.optimize
@@ -20,7 +21,7 @@ def spectral_clustering(S, labels, ite):
     try:
         eigen_val, eigen_vec = eigsh(Ls, p.clus_size, which="SM")
     except scipy.sparse.linalg.ArpackNoConvergence:
-        return 'nonconverge'
+        return 'nonconverge', -1, -1, -1
     
     metrics = {'ari':0., 'nmi':0., 'purity':0.}
     for _ in range(10):
@@ -30,7 +31,6 @@ def spectral_clustering(S, labels, ite):
         metrics['nmi'] += clus.adjusted_mutual_info_score(labels, k_means.labels_, "arithmetic")
         metrics['purity'] += utilities.purity(labels, k_means.labels_)
     for key in metrics.keys(): metrics[key] = metrics[key] / 10.
-    np.savetxt('./experiment/{0}_pred{1}'.format(p.AN_data, ite), k_means.labels_, fmt='%d')
     return 'converge', eigen_val, eigen_vec, metrics
 
 def ini_Q(sp):
@@ -130,16 +130,14 @@ def gamma_tuning(val):
     return eigen0
 
 def main():
+
     #initialize
-    plt.rcParams.update({'figure.max_open_warning': 0})
     np.random.seed(0)
-    
     if(p.AN_data=='cora'): features, edges, labels = utilities.load_fromgen(p.AN_data)
     else: features, edges, labels = utilities.load_fromcsv(p.AN_data)
     sp1 = utilities.make_sp1(features)
     sp2a, sp2b = utilities.make_sp2(edges, len(sp1[0]))
     sp = sp1 + [sp2a, sp2b]
-
     Q = ini_Q(sp) #matrix Q is used for later process(update_lambda)
     lamb = ini_lambda(sp)
     W = ini_W(sp, lamb)
@@ -153,7 +151,7 @@ def main():
                         .format(tri, metrics['ari'], metrics['nmi'], metrics['purity']))
             eigen0 = gamma_tuning(eigen_val)
             if(eigen0 == p.clus_size): break
-        else: print("===\narpack error\n==="); break
+        else: print("=========\narpack error\n========="); break
 
         update_S(S, W, eigen_vec)
         update_lamb(lamb, S, sp, Q)
