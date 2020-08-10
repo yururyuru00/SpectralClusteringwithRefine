@@ -1,6 +1,6 @@
 # Guide to experimental replication
 
-| dataset | c | \sigma |
+| dataset | c | $$\sigma$$ |
 |:---:|:---:|:---:|
 | cora | 7 | - |
 | citeseer | 6 | - |
