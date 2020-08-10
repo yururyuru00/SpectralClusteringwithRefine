@@ -14,7 +14,7 @@ Yuta Yajima, Akihiro Inokuchi, [Refining Similarity Matrices for \\Clustering At
 * cvxopt
 
 ## How to run
-For example, if you need to replicate the experiment result described in our paper in a cora dataset,
+For example, if you need to reproduce the experiment result described in our paper in a cora dataset,
 ```bash
 python SClump.py cora 7
 ```
