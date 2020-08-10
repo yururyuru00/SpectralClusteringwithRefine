@@ -1,22 +1,7 @@
-#!/usr/bin/env python
-# coding: utf-8
-
-# In[9]:
-
-
-import numpy as np
-import sys
-import ari
 import math
-import warnings
+import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
-from scipy.sparse.linalg import eigsh
-from sklearn.cluster import KMeans
-import sklearn.metrics.cluster as clus
-from sklearn.cluster import KMeans
-from Parameters import P as P
-from clustering_quolity import purity
 import networkx as nx
 
 def plot(vec, which):
@@ -185,10 +170,3 @@ def vec2file(vec, path):
     with open(path, "w") as w:
         for i in vec:
             w.write("{} ".format(i))
-
-
-# In[ ]:
-
-
-
-
