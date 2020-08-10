@@ -27,7 +27,7 @@ def load_fromcsv(dataset):
         [dim_size, obj_size] = list(map(int, r.readline().rstrip().split(' ')))
     features = np.zeros((obj_size, dim_size), dtype=np.float)
     dim_idobjct_val = np.genfromtxt("./data/{0}/{0}_content.csv".format(dataset),
-                                                            skip_header=1, dtype=np.dtype(int))
+                                                        skip_header=1, dtype=(int, int, float))
     for [dim_id, obj_id, val] in dim_idobjct_val:
         features[obj_id][dim_id] = float(val)
     edges = np.genfromtxt("./data/{0}/{0}_cites.csv".format(dataset),
@@ -41,7 +41,7 @@ def make_sp1(features):
         mat = np.zeros((usr_size, usr_size))
         for i in range(usr_size):
             for j in range(i+1, usr_size):
-                mat[i][j] = math.exp(-(feature[i]-feature[j])*(feature[i]-feature[j])                                      /(2*P.sigma*P.sigma))
+                mat[i][j] = math.exp(-(feature[i]-feature[j])*(feature[i]-feature[j]) / (2*P.sigma*P.sigma))
                 mat[j][i] = mat[i][j]
         for d in range(usr_size):
             mat[d][d] = 0.
