@@ -23,7 +23,7 @@ If you need to know how to set the hyper-parameters,
 python SClump.py --help
 ```
 (The parameter names of the command line arguments are the same as the ones listed in our paper.)
-For replication of other experiments result, please refer to SpectralClustering/data/README.md
+For replication of other experiments result, please refer to SpectralClustering_withRefine/data/README.md
 
 
 ## Cite
