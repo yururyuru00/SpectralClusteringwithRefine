@@ -1,4 +1,4 @@
-# SpectralClustering_withRefine
+# Spectral Clustering with Refine
 python scripts for my academic research#1.
 
 For a high-level explanation, read the following our paper.
