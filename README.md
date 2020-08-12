@@ -18,7 +18,7 @@ For example, if you need to reproduce the experiment result described in our pap
 ```bash
 python SClump.py cora 7
 ```
-If you need to know how to set the　parameters, 
+If you need to know how to set thparameters, 
 ```bash
 python SClump.py --help
 ```
