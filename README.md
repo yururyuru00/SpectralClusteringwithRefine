@@ -18,13 +18,24 @@ For example, if you need to reproduce the experiment result described in our pap
 ```bash
 python SClump.py cora 7
 ```
-If you need to know how to set the hyper-parameters, 
+If you need to know how to set the　parameters, 
 ```bash
 python SClump.py --help
 ```
 (The parameter names of the command line arguments are the same as the ones listed in our paper.)
 For replication of other experiments result, please refer to SpectralClustering_withRefine/data/README.md
 
+# Guide to experimental replication
+Experimental results described in our paper for each dataset could be reproduced by setting up the following.
+Please specify the following parameters using the command line arguments.
+
+| dataset | c | sigma | m | disable |
+|:---:|:---:|:---:|:---:|:---:|
+| cora | 7 | - | 80 | False |
+| citeseer | 6 | - | 80 | True |
+| football | 20 | 3 | 12 | False |
+| politicsuk | 5 | 0.2 | 80 | True |
+| olympics | 28 | 0.1 | 12 | False |
 
 ## Cite
 Please cite our paper if you use this code in your own work:
