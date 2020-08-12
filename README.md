@@ -23,7 +23,6 @@ If you need to know how to set the　parameters,
 python SClump.py --help
 ```
 (The parameter names of the command line arguments are the same as the ones listed in our paper.)
-For replication of other experiments result, please refer to SpectralClustering_withRefine/data/README.md
 
 # Guide to experimental replication
 Experimental results described in our paper for each dataset could be reproduced by setting up the following.
