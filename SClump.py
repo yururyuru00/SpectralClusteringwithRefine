@@ -1,8 +1,6 @@
 import argparse
 import numpy as np
-import matplotlib.pyplot as plt
 import cvxopt, scipy.optimize
-from tqdm import tqdm
 from cvxopt import matrix
 from scipy.sparse.linalg import eigsh
 from sklearn.cluster import KMeans
@@ -13,7 +11,7 @@ import utilities
 from Parameters import P
 
 
-def spectral_clustering(S, labels):
+def spectral_clustering(S, labels, iter):
     if(P.disable_normalization == False): Ls = ml.makeNormLaplacian(S)
     else: Ls = ml.makeLaplacian(S)
     try: 
@@ -29,6 +27,7 @@ def spectral_clustering(S, labels):
         metrics['nmi'] += clus.adjusted_mutual_info_score(labels, k_means.labels_, "arithmetic")
         metrics['purity'] += utilities.purity(labels, k_means.labels_)
     for key in metrics.keys(): metrics[key] = metrics[key] / 10.
+    np.savetxt('./result/{}/pred_unnorm_{}.csv'.format(P.dataset, iter), k_means.labels_)
     return 'converge', eigen_val, eigen_vec, metrics
 
 def ini_Q(sp):
@@ -155,7 +154,7 @@ def main():
 
     #Spectral Clustering + Refine(update_S)
     for tri in range(100):
-        state, eigen_val, eigen_vec, metrics = spectral_clustering(S, labels)
+        state, eigen_val, eigen_vec, metrics = spectral_clustering(S, labels, tri)
         if(state == 'converge'):
             print("tri: {}\n\tARI: {:.4f}\n\tNMI: {:.4f}\n\tPurity: {:.4f}" \
                         .format(tri, metrics['ari'], metrics['nmi'], metrics['purity']))
