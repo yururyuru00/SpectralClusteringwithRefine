@@ -12,7 +12,7 @@ Please cite our paper if you use this code in your own work: https://jsai.ixsq.n
 ```bash
 python SClump.py cora 7
 ```
-If you need to know how to set the　parameters, 
+If you need to know how to set the parameters, 
 ```bash
 python SClump.py --help
 ```
