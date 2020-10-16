@@ -2,6 +2,7 @@
 python scripts for my academic research#1
 
 this is a python scripts for our academic research#1
+
 plz cite https://jsai.ixsq.nii.ac.jp/ej/?action=pages_view_main&active_action=repository_view_main_item_detail&item_id=10714&item_no=1&page_id=13&block_id=23
 
 # How to Run
