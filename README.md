@@ -8,7 +8,7 @@ Please cite our paper if you use this code in your own work: https://jsai.ixsq.n
 [Yuta Yajima and Akihiro Inokuchi 2020 JSAI]
 
 
-# How to Run
+## How to Run
 ```bash
 python SClump.py cora 7
 ```
@@ -18,7 +18,7 @@ python SClump.py --help
 ```
 (The parameter names of the command line arguments are the same as the ones listed in our paper.)
 
-# Guide to experimental replication
+## Guide to experimental replication
 Experimental results described in our paper for each dataset could be reproduced by setting up the following.
 Please specify the following parameters using the command line arguments.
 | dataset | c | sigma | m | disable |
