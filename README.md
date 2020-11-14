@@ -5,7 +5,7 @@ this is a python scripts for our academic research#1
 
 ## Cite
 Please cite our paper if you use this code in your own work: https://arxiv.org/abs/2010.06854
-[Yuta Yajima and Akihiro Inokuchi 2020 International Conference (CANDAR)]
+[Yuta Yajima and Akihiro Inokuchi, International Conference (CANDAR2020)]
 
 
 ## How to Run
