@@ -4,7 +4,7 @@ this is a python scripts for our academic research#1
 
 
 ## Cite
-Please cite our paper if you use this code in your own work: https://jsai.ixsq.nii.ac.jp/ej/?action=pages_view_main&active_action=repository_view_main_item_detail&item_id=10714&item_no=1&page_id=13&block_id=23
+Please cite our paper if you use this code in your own work: https://arxiv.org/abs/2010.06854
 [Yuta Yajima and Akihiro Inokuchi 2020 JSAI]
 
 
